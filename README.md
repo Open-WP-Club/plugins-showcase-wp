@@ -10,6 +10,12 @@ A WordPress plugin to display a GitHub organization as a plugin catalog. Each re
 - Gutenberg blocks for embedding anywhere on the site
 - Automatic sync (daily, weekly, or monthly)
 - REST API for AJAX search
+- **Download button** with latest release version
+- **Contributors** section with avatars
+- **Screenshots** gallery (auto-fetched from repo)
+- **Requirements** display (PHP, WordPress versions)
+- **Open issues** count and link to GitHub Issues
+- **View counter** analytics for each plugin
 
 ## Installation
 
@@ -112,6 +118,19 @@ Parameters for `/plugins`:
 - `per_page` - number of results (default: 12)
 - `page` - page number (default: 1)
 
+## Screenshots Setup
+
+To display screenshots on your plugin pages, add images to one of these folders in your GitHub repository:
+
+- `.github/screenshots/` (recommended)
+- `screenshots/`
+- `assets/screenshots/`
+- `.wordpress-org/`
+
+Name files with numbers for sorting: `01-dashboard.png`, `02-settings.png`, etc.
+
+See `examples/SCREENSHOTS.md` for detailed instructions and GitHub Action for automatic screenshot generation.
+
 ## FAQ
 
 ### README not showing?
@@ -138,16 +157,6 @@ Add custom CSS in your theme or use the CSS classes:
 - `.plugins-showcase-single` - single page
 - `.plugins-showcase-readme` - README content
 
-## Changelog
-
-### 1.0.0
-
-- Initial release
-- GitHub API integration
-- Custom Post Type for plugins
-- Gutenberg blocks
-- Search and filters
-- REST API
 
 ## License
 

@@ -188,11 +188,28 @@ class Plugins_Showcase_Sync {
         }
 
         // Get topics
-        $topics = $this->github_api->get_topics( $org, $repo_name );
-        $repo_data['topics'] = $topics;
+        $repo_data['topics'] = $this->github_api->get_topics( $org, $repo_name );
 
         // Get README
         $readme = $this->github_api->get_readme( $org, $repo_name );
+
+        // Get latest release
+        $repo_data['latest_release'] = $this->github_api->get_latest_release( $org, $repo_name );
+
+        // Get contributors
+        $repo_data['contributors'] = $this->github_api->get_contributors( $org, $repo_name, 10 );
+
+        // Get screenshots
+        $repo_data['screenshots'] = $this->github_api->get_screenshots( $org, $repo_name );
+
+        // Get requirements from composer.json or plugin header
+        $composer = $this->github_api->get_composer_json( $org, $repo_name );
+        $plugin_header = $this->github_api->get_plugin_header( $org, $repo_name );
+
+        $repo_data['requirements'] = array_merge(
+            $composer ?? array(),
+            $plugin_header ?? array()
+        );
 
         // Create or update post
         return Plugins_Showcase_Post_Type::create_or_update( $repo_data, $readme );

@@ -1,0 +1,130 @@
+# GitHub Action for automatic screenshot generation
+# Copy this file to your repository: .github/workflows/screenshots.yml
+#
+# This action will:
+# 1. Take screenshots of your plugin's admin pages
+# 2. Save them to .github/screenshots/ folder
+# 3. Commit and push them automatically
+#
+# Requirements:
+# - Your plugin must be installed in a WordPress test environment
+# - Adjust the URLs below to match your test site
+
+name: Generate Screenshots
+
+on:
+  # Run manually from Actions tab
+  workflow_dispatch:
+  # Or run on release
+  release:
+    types: [published]
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install playwright
+          npx playwright install chromium
+
+      - name: Create screenshot directory
+        run: mkdir -p .github/screenshots
+
+      - name: Take screenshots
+        run: |
+          cat > screenshot.js << 'EOF'
+          const { chromium } = require('playwright');
+
+          (async () => {
+            const browser = await chromium.launch();
+            const context = await browser.newContext({
+              viewport: { width: 1280, height: 800 }
+            });
+            const page = await context.newPage();
+
+            // Define your screenshots here
+            // Format: { url: 'URL', name: 'filename', waitFor: 'selector (optional)' }
+            const screenshots = [
+              // Example: Plugin settings page
+              // {
+              //   url: 'https://your-test-site.com/wp-admin/admin.php?page=your-plugin-settings',
+              //   name: 'screenshot-1-settings.png',
+              //   login: true
+              // },
+              // Example: Frontend page
+              // {
+              //   url: 'https://your-test-site.com/your-plugin-page/',
+              //   name: 'screenshot-2-frontend.png'
+              // }
+            ];
+
+            // WordPress login credentials (use secrets in production!)
+            const WP_USER = process.env.WP_USER || 'admin';
+            const WP_PASS = process.env.WP_PASS || 'password';
+            const WP_URL = process.env.WP_URL || 'https://your-test-site.com';
+
+            // Login function
+            async function wpLogin() {
+              await page.goto(`${WP_URL}/wp-login.php`);
+              await page.fill('#user_login', WP_USER);
+              await page.fill('#user_pass', WP_PASS);
+              await page.click('#wp-submit');
+              await page.waitForURL('**/wp-admin/**');
+            }
+
+            let loggedIn = false;
+
+            for (const shot of screenshots) {
+              try {
+                if (shot.login && !loggedIn) {
+                  await wpLogin();
+                  loggedIn = true;
+                }
+
+                await page.goto(shot.url, { waitUntil: 'networkidle' });
+
+                if (shot.waitFor) {
+                  await page.waitForSelector(shot.waitFor);
+                }
+
+                // Wait a bit for animations
+                await page.waitForTimeout(1000);
+
+                await page.screenshot({
+                  path: `.github/screenshots/${shot.name}`,
+                  fullPage: false
+                });
+
+                console.log(`✓ Captured: ${shot.name}`);
+              } catch (error) {
+                console.error(`✗ Failed: ${shot.name}`, error.message);
+              }
+            }
+
+            await browser.close();
+          })();
+          EOF
+          node screenshot.js
+        env:
+          WP_URL: ${{ secrets.WP_TEST_URL }}
+          WP_USER: ${{ secrets.WP_TEST_USER }}
+          WP_PASS: ${{ secrets.WP_TEST_PASS }}
+
+      - name: Commit screenshots
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .github/screenshots/
+          git diff --staged --quiet || git commit -m "Update screenshots [skip ci]"
+          git push

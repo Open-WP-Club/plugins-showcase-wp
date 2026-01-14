@@ -128,6 +128,28 @@ class Plugins_Showcase_Admin {
             'plugins-showcase-settings',
             'plugins_showcase_sync'
         );
+
+        // Display Settings Section
+        add_settings_section(
+            'plugins_showcase_display',
+            __( 'Display Settings', 'plugins-showcase' ),
+            array( $this, 'display_section_callback' ),
+            'plugins-showcase-settings'
+        );
+
+        // Show categories
+        register_setting( 'plugins_showcase_settings', 'plugins_showcase_show_categories', array(
+            'type'    => 'boolean',
+            'default' => true,
+        ) );
+
+        add_settings_field(
+            'plugins_showcase_show_categories',
+            __( 'Show Categories', 'plugins-showcase' ),
+            array( $this, 'render_show_categories_field' ),
+            'plugins-showcase-settings',
+            'plugins_showcase_display'
+        );
     }
 
     /**
@@ -174,6 +196,10 @@ class Plugins_Showcase_Admin {
 
     public function sync_section_callback() {
         echo '<p>' . esc_html__( 'Configure how repositories are synced.', 'plugins-showcase' ) . '</p>';
+    }
+
+    public function display_section_callback() {
+        echo '<p>' . esc_html__( 'Configure how plugins are displayed on the frontend.', 'plugins-showcase' ) . '</p>';
     }
 
     /**
@@ -261,6 +287,19 @@ class Plugins_Showcase_Admin {
                    value="1"
                    <?php checked( $value, true ); ?>>
             <?php esc_html_e( 'Skip archived repositories during sync', 'plugins-showcase' ); ?>
+        </label>
+        <?php
+    }
+
+    public function render_show_categories_field() {
+        $value = get_option( 'plugins_showcase_show_categories', true );
+        ?>
+        <label>
+            <input type="checkbox"
+                   name="plugins_showcase_show_categories"
+                   value="1"
+                   <?php checked( $value, true ); ?>>
+            <?php esc_html_e( 'Show category tags on plugin pages (based on GitHub topics)', 'plugins-showcase' ); ?>
         </label>
         <?php
     }

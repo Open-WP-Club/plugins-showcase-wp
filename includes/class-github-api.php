@@ -250,4 +250,182 @@ class Plugins_Showcase_GitHub_API {
 
         return isset( $response['names'] ) ? $response['names'] : array();
     }
+
+    /**
+     * Get latest release
+     */
+    public function get_latest_release( $org, $repo ) {
+        $release = $this->request( "/repos/{$org}/{$repo}/releases/latest" );
+
+        if ( is_wp_error( $release ) ) {
+            return null;
+        }
+
+        return array(
+            'tag_name'     => $release['tag_name'] ?? '',
+            'name'         => $release['name'] ?? $release['tag_name'] ?? '',
+            'published_at' => $release['published_at'] ?? '',
+            'download_url' => $release['zipball_url'] ?? '',
+            'html_url'     => $release['html_url'] ?? '',
+            'body'         => $release['body'] ?? '',
+        );
+    }
+
+    /**
+     * Get repository contributors
+     */
+    public function get_contributors( $org, $repo, $limit = 10 ) {
+        $contributors = $this->request( "/repos/{$org}/{$repo}/contributors?per_page={$limit}" );
+
+        if ( is_wp_error( $contributors ) || ! is_array( $contributors ) ) {
+            return array();
+        }
+
+        return array_map( function( $contributor ) {
+            return array(
+                'login'      => $contributor['login'] ?? '',
+                'avatar_url' => $contributor['avatar_url'] ?? '',
+                'html_url'   => $contributor['html_url'] ?? '',
+                'contributions' => $contributor['contributions'] ?? 0,
+            );
+        }, $contributors );
+    }
+
+    /**
+     * Get open issues count
+     */
+    public function get_issues_count( $org, $repo ) {
+        $repo_data = $this->request( "/repos/{$org}/{$repo}" );
+
+        if ( is_wp_error( $repo_data ) ) {
+            return 0;
+        }
+
+        return $repo_data['open_issues_count'] ?? 0;
+    }
+
+    /**
+     * Get composer.json for requirements
+     */
+    public function get_composer_json( $org, $repo ) {
+        $file = $this->request( "/repos/{$org}/{$repo}/contents/composer.json" );
+
+        if ( is_wp_error( $file ) || ! isset( $file['content'] ) ) {
+            return null;
+        }
+
+        $content = base64_decode( $file['content'] );
+        $composer = json_decode( $content, true );
+
+        if ( ! $composer ) {
+            return null;
+        }
+
+        $requirements = array();
+
+        if ( isset( $composer['require']['php'] ) ) {
+            $requirements['php'] = $composer['require']['php'];
+        }
+
+        // Check for WordPress requirement in various formats
+        $wp_packages = array( 'wordpress/wordpress', 'johnpbloch/wordpress', 'roots/wordpress' );
+        foreach ( $wp_packages as $package ) {
+            if ( isset( $composer['require'][ $package ] ) ) {
+                $requirements['wordpress'] = $composer['require'][ $package ];
+                break;
+            }
+        }
+
+        // Check extra field for WP requirements
+        if ( isset( $composer['extra']['wordpress'] ) ) {
+            $requirements = array_merge( $requirements, $composer['extra']['wordpress'] );
+        }
+
+        return $requirements;
+    }
+
+    /**
+     * Get plugin header from main PHP file
+     */
+    public function get_plugin_header( $org, $repo ) {
+        // Try common plugin file names
+        $files = array(
+            "{$repo}.php",
+            'plugin.php',
+            'index.php',
+        );
+
+        foreach ( $files as $filename ) {
+            $file = $this->request( "/repos/{$org}/{$repo}/contents/{$filename}" );
+
+            if ( is_wp_error( $file ) || ! isset( $file['content'] ) ) {
+                continue;
+            }
+
+            $content = base64_decode( $file['content'] );
+
+            // Parse WordPress plugin header
+            $headers = array(
+                'requires_php' => 'Requires PHP',
+                'requires_wp'  => 'Requires at least',
+                'tested_wp'    => 'Tested up to',
+                'version'      => 'Version',
+            );
+
+            $result = array();
+            foreach ( $headers as $key => $header ) {
+                if ( preg_match( '/\*\s*' . preg_quote( $header, '/' ) . ':\s*(.+)/i', $content, $matches ) ) {
+                    $result[ $key ] = trim( $matches[1] );
+                }
+            }
+
+            if ( ! empty( $result ) ) {
+                return $result;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get screenshots from repository
+     */
+    public function get_screenshots( $org, $repo ) {
+        // Check for screenshots in common locations
+        $locations = array(
+            '.github/screenshots',
+            'screenshots',
+            'assets/screenshots',
+            '.wordpress-org',
+        );
+
+        foreach ( $locations as $location ) {
+            $contents = $this->request( "/repos/{$org}/{$repo}/contents/{$location}" );
+
+            if ( is_wp_error( $contents ) || ! is_array( $contents ) ) {
+                continue;
+            }
+
+            $screenshots = array();
+            foreach ( $contents as $file ) {
+                if ( isset( $file['name'] ) && preg_match( '/\.(png|jpg|jpeg|gif|webp)$/i', $file['name'] ) ) {
+                    $screenshots[] = array(
+                        'name'         => $file['name'],
+                        'download_url' => $file['download_url'] ?? '',
+                        'path'         => $file['path'] ?? '',
+                    );
+                }
+            }
+
+            if ( ! empty( $screenshots ) ) {
+                // Sort by filename
+                usort( $screenshots, function( $a, $b ) {
+                    return strnatcmp( $a['name'], $b['name'] );
+                } );
+                return $screenshots;
+            }
+        }
+
+        return array();
+    }
 }

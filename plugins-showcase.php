@@ -4,7 +4,7 @@
  * Plugin Name: Plugins Showcase
  * Plugin URI: https://github.com/Open-WP-Club/plugins-showcase-wp
  * Description: Display GitHub organization repositories as plugin showcase pages with search and Gutenberg blocks.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Your Name
  * Author URI: https://OpenWPClub.com
  * License: GPL-2.0+
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'PLUGINS_SHOWCASE_VERSION', '1.0.0' );
+define( 'PLUGINS_SHOWCASE_VERSION', '1.1.0' );
 define( 'PLUGINS_SHOWCASE_PATH', plugin_dir_path( __FILE__ ) );
 define( 'PLUGINS_SHOWCASE_URL', plugin_dir_url( __FILE__ ) );
 
