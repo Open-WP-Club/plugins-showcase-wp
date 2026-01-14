@@ -27,6 +27,7 @@ class Plugins_Showcase_Sync {
         add_action( 'wp_ajax_plugins_showcase_sync_single', array( $this, 'ajax_sync_single' ) );
         add_action( 'wp_ajax_plugins_showcase_delete_all', array( $this, 'ajax_delete_all' ) );
         add_action( 'wp_ajax_plugins_showcase_test_token', array( $this, 'ajax_test_token' ) );
+        add_action( 'wp_ajax_plugins_showcase_get_rate_limit', array( $this, 'ajax_get_rate_limit' ) );
 
         // Cron
         add_action( 'plugins_showcase_scheduled_sync', array( $this, 'cron_sync' ) );
@@ -320,6 +321,22 @@ class Plugins_Showcase_Sync {
         }
 
         return count( $posts );
+    }
+
+    /**
+     * AJAX: Get GitHub API rate limit
+     */
+    public function ajax_get_rate_limit() {
+        check_ajax_referer( 'plugins_showcase_admin', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( array( 'message' => __( 'Insufficient permissions', 'plugins-showcase' ) ) );
+        }
+
+        // Fetch fresh rate limit from GitHub
+        $rate_limit = $this->github_api->fetch_rate_limit();
+
+        wp_send_json_success( $rate_limit );
     }
 }
 

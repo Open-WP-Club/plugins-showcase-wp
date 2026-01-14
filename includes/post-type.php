@@ -55,52 +55,116 @@ class Plugins_Showcase_Post_Type {
         // Settings
         $show_categories = get_option( 'plugins_showcase_show_categories', true );
 
+        // Get additional meta
+        $language   = get_post_meta( $post_id, '_github_language', true );
+        $updated_at = get_post_meta( $post_id, '_github_updated', true );
+
         $output = '<div class="plugins-showcase-plugin-page">';
 
-        // Top action bar with GitHub, Playground, Issues, Views
+        // Top action bar - all meta items with same design
         $output .= '<div class="plugins-showcase-action-bar">';
 
-        if ( $github_url ) {
-            // View on GitHub
-            $output .= '<a href="' . esc_url( $github_url ) . '" class="plugins-showcase-action-btn" target="_blank" rel="noopener">';
-            $output .= '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>';
-            $output .= ' GitHub</a>';
+        // Language
+        if ( ! empty( $language ) ) {
+            $output .= '<span class="plugins-showcase-action-item">';
+            $output .= '<span class="plugins-showcase-language-dot" data-language="' . esc_attr( strtolower( $language ) ) . '"></span>';
+            $output .= esc_html( $language ) . '</span>';
+        }
 
-            // WordPress Playground
-            $playground_url = 'https://playground.wordpress.net/?plugin=' . urlencode( $github_url );
-            $output .= '<a href="' . esc_url( $playground_url ) . '" class="plugins-showcase-action-btn plugins-showcase-playground-btn" target="_blank" rel="noopener">';
-            $output .= '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"></path></svg>';
-            $output .= ' ' . esc_html__( 'Live Preview', 'plugins-showcase' ) . '</a>';
-
-            // Issues
-            $output .= '<a href="' . esc_url( $github_url . '/issues' ) . '" class="plugins-showcase-action-btn" target="_blank" rel="noopener">';
-            $output .= '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"></path><path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"></path></svg>';
-            $output .= ' ' . sprintf( esc_html__( '%d Issues', 'plugins-showcase' ), (int) $open_issues ) . '</a>';
+        // Updated date
+        if ( ! empty( $updated_at ) ) {
+            $time_ago = human_time_diff( strtotime( $updated_at ), current_time( 'timestamp' ) );
+            $output .= '<span class="plugins-showcase-action-item">';
+            $output .= sprintf( esc_html__( 'Updated %s ago', 'plugins-showcase' ), $time_ago ) . '</span>';
         }
 
         // Views
-        $output .= '<span class="plugins-showcase-action-btn plugins-showcase-views">';
-        $output .= '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M1.679 7.932c.412-.621 1.242-1.75 2.366-2.717C5.175 4.242 6.527 3.5 8 3.5c1.473 0 2.824.742 3.955 1.715 1.124.967 1.954 2.096 2.366 2.717a.119.119 0 010 .136c-.412.621-1.242 1.75-2.366 2.717C10.825 11.758 9.473 12.5 8 12.5c-1.473 0-2.824-.742-3.955-1.715C2.92 9.818 2.09 8.69 1.679 8.068a.119.119 0 010-.136zM8 2c-1.981 0-3.67.992-4.933 2.078C1.797 5.169.88 6.423.43 7.1a1.619 1.619 0 000 1.798c.45.678 1.367 1.932 2.637 3.024C4.329 13.008 6.019 14 8 14c1.981 0 3.67-.992 4.933-2.078 1.27-1.091 2.187-2.345 2.637-3.023a1.619 1.619 0 000-1.798c-.45-.678-1.367-1.932-2.637-3.023C11.671 2.992 9.981 2 8 2zm0 8a2 2 0 100-4 2 2 0 000 4z"></path></svg>';
+        $output .= '<span class="plugins-showcase-action-item">';
+        $output .= '<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M1.679 7.932c.412-.621 1.242-1.75 2.366-2.717C5.175 4.242 6.527 3.5 8 3.5c1.473 0 2.824.742 3.955 1.715 1.124.967 1.954 2.096 2.366 2.717a.119.119 0 010 .136c-.412.621-1.242 1.75-2.366 2.717C10.825 11.758 9.473 12.5 8 12.5c-1.473 0-2.824-.742-3.955-1.715C2.92 9.818 2.09 8.69 1.679 8.068a.119.119 0 010-.136zM8 2c-1.981 0-3.67.992-4.933 2.078C1.797 5.169.88 6.423.43 7.1a1.619 1.619 0 000 1.798c.45.678 1.367 1.932 2.637 3.024C4.329 13.008 6.019 14 8 14c1.981 0 3.67-.992 4.933-2.078 1.27-1.091 2.187-2.345 2.637-3.023a1.619 1.619 0 000-1.798c-.45-.678-1.367-1.932-2.637-3.023C11.671 2.992 9.981 2 8 2zm0 8a2 2 0 100-4 2 2 0 000 4z"></path></svg>';
         $output .= ' ' . sprintf( esc_html__( '%d views', 'plugins-showcase' ), $views ) . '</span>';
+
+        // Issues
+        if ( $github_url ) {
+            $output .= '<a href="' . esc_url( $github_url . '/issues' ) . '" class="plugins-showcase-action-item" target="_blank" rel="noopener">';
+            $output .= '<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"></path><path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"></path></svg>';
+            $output .= ' ' . sprintf( esc_html__( '%d Issues', 'plugins-showcase' ), (int) $open_issues ) . '</a>';
+        }
+
+        // Spacer
+        $output .= '<span class="plugins-showcase-action-spacer"></span>';
+
+        // Action buttons (right side)
+        if ( $github_url ) {
+            // WordPress Playground
+            $playground_url = 'https://playground.wordpress.net/?plugin=' . urlencode( $github_url );
+            $output .= '<a href="' . esc_url( $playground_url ) . '" class="plugins-showcase-action-btn" target="_blank" rel="noopener">';
+            $output .= '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"></path></svg>';
+            $output .= ' ' . esc_html__( 'Live Preview', 'plugins-showcase' ) . '</a>';
+
+            // View on GitHub
+            $output .= '<a href="' . esc_url( $github_url ) . '" class="plugins-showcase-action-btn" target="_blank" rel="noopener">';
+            $output .= '<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>';
+            $output .= ' GitHub</a>';
+        }
 
         $output .= '</div>'; // End action bar
 
-        // Categories (if enabled)
-        if ( $show_categories ) {
-            $categories = get_the_terms( $post_id, self::TAXONOMY );
-            if ( $categories && ! is_wp_error( $categories ) ) {
-                $output .= '<div class="plugins-showcase-categories">';
-                foreach ( $categories as $category ) {
-                    $output .= '<a href="' . esc_url( get_term_link( $category ) ) . '" class="plugins-showcase-category-tag">';
-                    $output .= esc_html( $category->name ) . '</a>';
+        // Second bar: Download, Requirements, Contributors, Categories
+        $has_second_bar = ! empty( $release['download_url'] ) || ! empty( $requirements ) || ! empty( $contributors ) || ( $show_categories && ! empty( get_the_terms( $post_id, self::TAXONOMY ) ) );
+
+        if ( $has_second_bar ) {
+            $output .= '<div class="plugins-showcase-meta-bar">';
+
+            // Download button
+            if ( ! empty( $release ) && ! empty( $release['download_url'] ) ) {
+                $output .= '<a href="' . esc_url( $release['download_url'] ) . '" class="plugins-showcase-download-link">';
+                $output .= '<svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 011 12.25v-2.5a.75.75 0 011.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 00.25-.25v-2.5a.75.75 0 011.5 0v2.5A1.75 1.75 0 0113.25 14H2.75z"></path><path d="M7.25 7.689V2a.75.75 0 011.5 0v5.689l1.97-1.969a.749.749 0 111.06 1.06l-3.25 3.25a.749.749 0 01-1.06 0L4.22 6.78a.749.749 0 111.06-1.06l1.97 1.969z"></path></svg>';
+                $output .= ' ' . esc_html__( 'Download', 'plugins-showcase' );
+                if ( ! empty( $release['tag_name'] ) ) {
+                    $output .= ' <span class="plugins-showcase-version-tag">v' . esc_html( $release['tag_name'] ) . '</span>';
                 }
-                $output .= '</div>';
+                $output .= '</a>';
             }
+
+            // Requirements inline
+            if ( ! empty( $requirements ) ) {
+                if ( ! empty( $requirements['php'] ) || ! empty( $requirements['requires_php'] ) ) {
+                    $php_version = $requirements['requires_php'] ?? $requirements['php'];
+                    $output .= '<span class="plugins-showcase-action-item">PHP ' . esc_html( $php_version ) . '+</span>';
+                }
+                if ( ! empty( $requirements['wordpress'] ) || ! empty( $requirements['requires_wp'] ) ) {
+                    $wp_version = $requirements['requires_wp'] ?? $requirements['wordpress'];
+                    $output .= '<span class="plugins-showcase-action-item">WP ' . esc_html( $wp_version ) . '+</span>';
+                }
+            }
+
+            // Contributors inline
+            if ( ! empty( $contributors ) && is_array( $contributors ) ) {
+                $output .= '<span class="plugins-showcase-contributors-inline">';
+                foreach ( array_slice( $contributors, 0, 5 ) as $contributor ) {
+                    $output .= '<a href="' . esc_url( $contributor['html_url'] ) . '" target="_blank" rel="noopener" title="' . esc_attr( $contributor['login'] ) . '">';
+                    $output .= '<img src="' . esc_url( $contributor['avatar_url'] ) . '&s=32" alt="' . esc_attr( $contributor['login'] ) . '" width="24" height="24">';
+                    $output .= '</a>';
+                }
+                $output .= '</span>';
+            }
+
+            // Categories (if enabled)
+            if ( $show_categories ) {
+                $categories = get_the_terms( $post_id, self::TAXONOMY );
+                if ( $categories && ! is_wp_error( $categories ) ) {
+                    $output .= '<span class="plugins-showcase-action-spacer"></span>';
+                    foreach ( $categories as $category ) {
+                        $output .= '<a href="' . esc_url( get_term_link( $category ) ) . '" class="plugins-showcase-category-tag">';
+                        $output .= esc_html( $category->name ) . '</a>';
+                    }
+                }
+            }
+
+            $output .= '</div>'; // End meta bar
         }
 
-        $output .= '<div class="plugins-showcase-content-wrapper">';
-
-        // Main content (first for SEO and mobile)
+        // Main content (full width now)
         $output .= '<div class="plugins-showcase-main-content">';
 
         // Screenshots
@@ -128,59 +192,6 @@ class Plugins_Showcase_Post_Type {
         }
 
         $output .= '</div>'; // End main content
-
-        // Sidebar with meta info
-        $output .= '<aside class="plugins-showcase-sidebar">';
-
-        // Download button
-        if ( ! empty( $release ) && ! empty( $release['download_url'] ) ) {
-            $output .= '<div class="plugins-showcase-download-box">';
-            $output .= '<a href="' . esc_url( $release['download_url'] ) . '" class="plugins-showcase-download-btn">';
-            $output .= '<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M2.75 14A1.75 1.75 0 011 12.25v-2.5a.75.75 0 011.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 00.25-.25v-2.5a.75.75 0 011.5 0v2.5A1.75 1.75 0 0113.25 14H2.75z"></path><path d="M7.25 7.689V2a.75.75 0 011.5 0v5.689l1.97-1.969a.749.749 0 111.06 1.06l-3.25 3.25a.749.749 0 01-1.06 0L4.22 6.78a.749.749 0 111.06-1.06l1.97 1.969z"></path></svg>';
-            $output .= ' ' . esc_html__( 'Download', 'plugins-showcase' );
-            $output .= '</a>';
-            if ( ! empty( $release['tag_name'] ) ) {
-                $output .= '<span class="plugins-showcase-version">v' . esc_html( $release['tag_name'] ) . '</span>';
-            }
-            $output .= '</div>';
-        }
-
-        // Requirements/Compatibility
-        if ( ! empty( $requirements ) ) {
-            $output .= '<div class="plugins-showcase-requirements">';
-            $output .= '<h4>' . esc_html__( 'Requirements', 'plugins-showcase' ) . '</h4>';
-            $output .= '<ul>';
-            if ( ! empty( $requirements['php'] ) || ! empty( $requirements['requires_php'] ) ) {
-                $php_version = $requirements['requires_php'] ?? $requirements['php'];
-                $output .= '<li><strong>PHP:</strong> ' . esc_html( $php_version ) . '+</li>';
-            }
-            if ( ! empty( $requirements['wordpress'] ) || ! empty( $requirements['requires_wp'] ) ) {
-                $wp_version = $requirements['requires_wp'] ?? $requirements['wordpress'];
-                $output .= '<li><strong>WordPress:</strong> ' . esc_html( $wp_version ) . '+</li>';
-            }
-            if ( ! empty( $requirements['tested_wp'] ) ) {
-                $output .= '<li><strong>' . esc_html__( 'Tested up to:', 'plugins-showcase' ) . '</strong> ' . esc_html( $requirements['tested_wp'] ) . '</li>';
-            }
-            $output .= '</ul>';
-            $output .= '</div>';
-        }
-
-        // Contributors
-        if ( ! empty( $contributors ) && is_array( $contributors ) ) {
-            $output .= '<div class="plugins-showcase-contributors">';
-            $output .= '<h4>' . esc_html__( 'Contributors', 'plugins-showcase' ) . '</h4>';
-            $output .= '<div class="plugins-showcase-contributors-list">';
-            foreach ( array_slice( $contributors, 0, 8 ) as $contributor ) {
-                $output .= '<a href="' . esc_url( $contributor['html_url'] ) . '" target="_blank" rel="noopener" title="' . esc_attr( $contributor['login'] ) . '">';
-                $output .= '<img src="' . esc_url( $contributor['avatar_url'] ) . '&s=40" alt="' . esc_attr( $contributor['login'] ) . '" width="32" height="32">';
-                $output .= '</a>';
-            }
-            $output .= '</div>';
-            $output .= '</div>';
-        }
-
-        $output .= '</aside>'; // End sidebar
-        $output .= '</div>'; // End content wrapper
         $output .= '</div>'; // End plugin page
 
         return $output;

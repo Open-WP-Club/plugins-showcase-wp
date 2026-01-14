@@ -53,6 +53,9 @@ class Plugins_Showcase_GitHub_API {
             return $response;
         }
 
+        // Save rate limit info from headers
+        $this->save_rate_limit( $response );
+
         $code = wp_remote_retrieve_response_code( $response );
         $body = wp_remote_retrieve_body( $response );
 
@@ -61,6 +64,75 @@ class Plugins_Showcase_GitHub_API {
         }
 
         return json_decode( $body, true );
+    }
+
+    /**
+     * Save rate limit info from response headers
+     */
+    private function save_rate_limit( $response ) {
+        $headers = wp_remote_retrieve_headers( $response );
+
+        $rate_limit = array(
+            'limit'     => isset( $headers['x-ratelimit-limit'] ) ? (int) $headers['x-ratelimit-limit'] : 60,
+            'remaining' => isset( $headers['x-ratelimit-remaining'] ) ? (int) $headers['x-ratelimit-remaining'] : 60,
+            'reset'     => isset( $headers['x-ratelimit-reset'] ) ? (int) $headers['x-ratelimit-reset'] : time() + 3600,
+            'used'      => isset( $headers['x-ratelimit-used'] ) ? (int) $headers['x-ratelimit-used'] : 0,
+            'updated'   => time(),
+        );
+
+        update_option( 'plugins_showcase_rate_limit', $rate_limit );
+    }
+
+    /**
+     * Get current rate limit status
+     */
+    public static function get_rate_limit() {
+        $rate_limit = get_option( 'plugins_showcase_rate_limit', array() );
+
+        if ( empty( $rate_limit ) ) {
+            return array(
+                'limit'     => 60,
+                'remaining' => 60,
+                'reset'     => time() + 3600,
+                'used'      => 0,
+                'updated'   => null,
+            );
+        }
+
+        return $rate_limit;
+    }
+
+    /**
+     * Fetch fresh rate limit from GitHub API
+     */
+    public function fetch_rate_limit() {
+        $response = wp_remote_get( $this->api_base . '/rate_limit', array(
+            'headers' => $this->get_headers(),
+            'timeout' => 10,
+        ) );
+
+        if ( is_wp_error( $response ) ) {
+            return self::get_rate_limit();
+        }
+
+        $this->save_rate_limit( $response );
+
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+        if ( isset( $body['rate'] ) ) {
+            $rate_limit = array(
+                'limit'     => $body['rate']['limit'] ?? 60,
+                'remaining' => $body['rate']['remaining'] ?? 60,
+                'reset'     => $body['rate']['reset'] ?? time() + 3600,
+                'used'      => $body['rate']['used'] ?? 0,
+                'updated'   => time(),
+            );
+
+            update_option( 'plugins_showcase_rate_limit', $rate_limit );
+            return $rate_limit;
+        }
+
+        return self::get_rate_limit();
     }
 
     /**

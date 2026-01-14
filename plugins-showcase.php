@@ -22,11 +22,11 @@ define( 'PLUGINS_SHOWCASE_PATH', plugin_dir_path( __FILE__ ) );
 define( 'PLUGINS_SHOWCASE_URL', plugin_dir_url( __FILE__ ) );
 
 // Include required files
-require_once PLUGINS_SHOWCASE_PATH . 'includes/class-github-api.php';
-require_once PLUGINS_SHOWCASE_PATH . 'includes/class-post-type.php';
-require_once PLUGINS_SHOWCASE_PATH . 'includes/class-sync.php';
-require_once PLUGINS_SHOWCASE_PATH . 'includes/class-blocks.php';
-require_once PLUGINS_SHOWCASE_PATH . 'admin/class-admin.php';
+require_once PLUGINS_SHOWCASE_PATH . 'includes/github-api.php';
+require_once PLUGINS_SHOWCASE_PATH . 'includes/post-type.php';
+require_once PLUGINS_SHOWCASE_PATH . 'includes/sync.php';
+require_once PLUGINS_SHOWCASE_PATH . 'includes/blocks.php';
+require_once PLUGINS_SHOWCASE_PATH . 'admin/admin.php';
 
 /**
  * Main Plugin Class
