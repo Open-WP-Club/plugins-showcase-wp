@@ -3,6 +3,8 @@
  * Template for plugins archive page
  */
 
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 get_header();
 
 $categories = get_terms( array(

@@ -3,6 +3,8 @@
  * Template for single plugin page
  */
 
+if ( ! defined( 'ABSPATH' ) ) exit;
+
 get_header();
 
 while ( have_posts() ) :
