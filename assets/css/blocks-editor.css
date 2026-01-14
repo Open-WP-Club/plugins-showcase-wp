@@ -1,0 +1,28 @@
+/* Plugins Showcase - Block Editor Styles */
+
+.plugins-showcase-block-preview {
+    padding: 1rem;
+}
+
+.plugins-showcase-preview-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.plugins-showcase-preview-info p {
+    margin: 0;
+    width: 100%;
+    color: #757575;
+}
+
+.plugins-showcase-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    background: #e0e0e0;
+    border-radius: 3px;
+    color: #333;
+}
