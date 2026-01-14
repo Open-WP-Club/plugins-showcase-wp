@@ -26,6 +26,7 @@ class Plugins_Showcase_Sync {
         add_action( 'wp_ajax_plugins_showcase_sync', array( $this, 'ajax_sync' ) );
         add_action( 'wp_ajax_plugins_showcase_sync_single', array( $this, 'ajax_sync_single' ) );
         add_action( 'wp_ajax_plugins_showcase_delete_all', array( $this, 'ajax_delete_all' ) );
+        add_action( 'wp_ajax_plugins_showcase_test_token', array( $this, 'ajax_test_token' ) );
 
         // Cron
         add_action( 'plugins_showcase_scheduled_sync', array( $this, 'cron_sync' ) );
@@ -195,6 +196,78 @@ class Plugins_Showcase_Sync {
 
         // Create or update post
         return Plugins_Showcase_Post_Type::create_or_update( $repo_data, $readme );
+    }
+
+    /**
+     * AJAX: Test GitHub token
+     */
+    public function ajax_test_token() {
+        check_ajax_referer( 'plugins_showcase_admin', 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( array( 'message' => __( 'Insufficient permissions', 'plugins-showcase' ) ) );
+        }
+
+        $token = isset( $_POST['token'] ) ? sanitize_text_field( $_POST['token'] ) : '';
+
+        if ( empty( $token ) ) {
+            wp_send_json_error( array( 'message' => __( 'No token provided', 'plugins-showcase' ) ) );
+        }
+
+        // Test the token by making a request to GitHub API
+        $response = wp_remote_get( 'https://api.github.com/user', array(
+            'headers' => array(
+                'Authorization' => 'Bearer ' . $token,
+                'Accept'        => 'application/vnd.github.v3+json',
+                'User-Agent'    => 'WordPress/Plugins-Showcase',
+            ),
+            'timeout' => 15,
+        ) );
+
+        if ( is_wp_error( $response ) ) {
+            wp_send_json_error( array( 'message' => $response->get_error_message() ) );
+        }
+
+        $code = wp_remote_retrieve_response_code( $response );
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+        if ( $code === 200 ) {
+            $rate_response = wp_remote_get( 'https://api.github.com/rate_limit', array(
+                'headers' => array(
+                    'Authorization' => 'Bearer ' . $token,
+                    'Accept'        => 'application/vnd.github.v3+json',
+                    'User-Agent'    => 'WordPress/Plugins-Showcase',
+                ),
+            ) );
+
+            $rate_limit = 5000;
+            $rate_remaining = 5000;
+
+            if ( ! is_wp_error( $rate_response ) ) {
+                $rate_body = json_decode( wp_remote_retrieve_body( $rate_response ), true );
+                if ( isset( $rate_body['rate'] ) ) {
+                    $rate_limit = $rate_body['rate']['limit'];
+                    $rate_remaining = $rate_body['rate']['remaining'];
+                }
+            }
+
+            wp_send_json_success( array(
+                'message'   => sprintf(
+                    __( 'Token valid! Authenticated as %s. Rate limit: %d/%d requests remaining.', 'plugins-showcase' ),
+                    $body['login'],
+                    $rate_remaining,
+                    $rate_limit
+                ),
+                'user'      => $body['login'],
+                'rate'      => $rate_remaining . '/' . $rate_limit,
+            ) );
+        } elseif ( $code === 401 ) {
+            wp_send_json_error( array( 'message' => __( 'Invalid token. Please check and try again.', 'plugins-showcase' ) ) );
+        } else {
+            wp_send_json_error( array(
+                'message' => sprintf( __( 'GitHub API error: %s', 'plugins-showcase' ), $body['message'] ?? 'Unknown error' ),
+            ) );
+        }
     }
 
     /**

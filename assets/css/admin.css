@@ -41,3 +41,13 @@
 .plugins-showcase-settings #sync-results span {
     font-weight: bold;
 }
+
+/* Token test */
+#token-status {
+    margin-left: 10px;
+    font-weight: 500;
+}
+
+#test-token {
+    margin-left: 5px;
+}

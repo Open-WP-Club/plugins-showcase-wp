@@ -47,6 +47,44 @@
             });
         });
 
+        // Test token button handler
+        $('#test-token').on('click', function() {
+            var $btn = $(this);
+            var $status = $('#token-status');
+            var token = $('#plugins_showcase_github_token').val();
+
+            if (!token) {
+                $status.text('Please enter a token first').css('color', '#dc3232');
+                return;
+            }
+
+            $btn.prop('disabled', true);
+            $status.text('Testing...').css('color', '#0073aa');
+
+            $.ajax({
+                url: pluginsShowcaseAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'plugins_showcase_test_token',
+                    nonce: pluginsShowcaseAdmin.nonce,
+                    token: token
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $status.text(response.data.message).css('color', '#46b450');
+                    } else {
+                        $status.text(response.data.message).css('color', '#dc3232');
+                    }
+                },
+                error: function() {
+                    $status.text('Network error').css('color', '#dc3232');
+                },
+                complete: function() {
+                    $btn.prop('disabled', false);
+                }
+            });
+        });
+
         // Delete all button handler
         $deleteBtn.on('click', function() {
             if (!confirm(strings.confirm)) {

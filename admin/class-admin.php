@@ -198,8 +198,13 @@ class Plugins_Showcase_Admin {
         ?>
         <input type="password"
                name="plugins_showcase_github_token"
+               id="plugins_showcase_github_token"
                value="<?php echo esc_attr( $value ); ?>"
                class="regular-text">
+        <button type="button" id="test-token" class="button button-secondary">
+            <?php esc_html_e( 'Test Token', 'plugins-showcase' ); ?>
+        </button>
+        <span id="token-status"></span>
         <p class="description">
             <?php esc_html_e( 'Optional: Add a GitHub personal access token for higher rate limits and private repos.', 'plugins-showcase' ); ?>
         </p>
