@@ -2,6 +2,7 @@
 
 /**
  * Plugin Name: Plugins Showcase
+ * Tested up to: 7.1.4
  * Plugin URI: https://github.com/Open-WP-Club/plugins-showcase-wp
  * Description: Display GitHub organization repositories as plugin showcase pages with search and Gutenberg blocks.
  * Version: 1.1.0
